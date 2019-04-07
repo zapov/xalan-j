@@ -160,35 +160,36 @@ public class DOM2TO implements XMLReader, Locator {
 	    }
             
 	    // Process all non-namespace attributes next
-            NamespaceMappings nm = new NamespaceMappings();
+        NamespaceMappings nm = null;
 	    for (int i = 0; i < length; i++) {
-		final Node attr = map.item(i);
-		final String qnameAttr = attr.getNodeName();
+			final Node attr = map.item(i);
+			final String qnameAttr = attr.getNodeName();
 
-                // Is this a regular attribute?
-		if (!qnameAttr.startsWith(XMLNS_PREFIX)) {
-		    final String uriAttr = attr.getNamespaceURI();
-		    // Uri may be implicitly declared
-		    if (uriAttr != null && !uriAttr.equals(EMPTYSTRING) ) {	
-			colon = qnameAttr.lastIndexOf(':');
-                           
-                        // Fix for bug 26319
-                        // For attributes not given an prefix explictly
-                        // but having a namespace uri we need
-                        // to explicitly generate the prefix
-                        String newPrefix = nm.lookupPrefix(uriAttr);
-                        if (newPrefix == null) 
-                            newPrefix = nm.generateNextPrefix();
-			prefix = (colon > 0) ? qnameAttr.substring(0, colon) 
-			    : newPrefix;
-			_handler.namespaceAfterStartElement(prefix, uriAttr);
-		        _handler.addAttribute((prefix + ":" + qnameAttr),
-                            attr.getNodeValue());
-		    } else {
-                         _handler.addAttribute(qnameAttr, attr.getNodeValue());
-                    }
-                }
-	    }
+			// Is this a regular attribute?
+			if (!qnameAttr.startsWith(XMLNS_PREFIX)) {
+				final String uriAttr = attr.getNamespaceURI();
+				// Uri may be implicitly declared
+				if (uriAttr != null && !uriAttr.equals(EMPTYSTRING)) {
+					colon = qnameAttr.lastIndexOf(':');
+					if (nm == null) nm = new NamespaceMappings();
+
+					// Fix for bug 26319
+					// For attributes not given an prefix explictly
+					// but having a namespace uri we need
+					// to explicitly generate the prefix
+					String newPrefix = nm.lookupPrefix(uriAttr);
+					if (newPrefix == null)
+						newPrefix = nm.generateNextPrefix();
+					prefix = (colon > 0) ? qnameAttr.substring(0, colon)
+							: newPrefix;
+					_handler.namespaceAfterStartElement(prefix, uriAttr);
+					_handler.addAttribute((prefix + ":" + qnameAttr),
+							attr.getNodeValue());
+				} else {
+					_handler.addAttribute(qnameAttr, attr.getNodeValue());
+				}
+			}
+		}
 
 	    // Now element namespace and children
 	    final String uri = node.getNamespaceURI();
